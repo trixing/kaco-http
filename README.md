@@ -47,7 +47,6 @@ This shows us a few interesting things
 
 * It runs on an ESP32 module
 * There seems to be MQTT support (host cn-shanghai, port 1883)
-```
 
 Unfortunately the other URLs didn't quite work but expected some parameters.
 
