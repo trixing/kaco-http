@@ -1,14 +1,16 @@
 # Reverse Engineering the KACO Blueplanet NX3 M2 HTTP Interface
 
 I recently installed a new solar inverter from Kaco (Blueplanet NX3 M2 8.0 to be
-specific). This is a pretty basic no-frills inverter which comes with a Modbus/TCP
-interface.
+specific). This is a pretty basic no-frills inverter which comes with a no-UI
+Modbus/TCP interface on standard port 502. This is well documented.
 
-It also comes with a Android and iOS app to do the setup and initial set up. The
-App also asks for a password to change the settings after first set up.
+In addition it comes with a Android and iOS app to do the initial set up and
+provide some monitoring. The App also asks for a password to change the settings
+after first set up (these are quite sensitive for the power grid).
 
-I noticed that the App shows a bit more data (in particular the power for each
+I noticed that the app shows a bit more data (in particular the power for each
 of the individual MPPT trackers) and wanted to integrate this in my reporting.
+
 
 ## Finding the HTTP port
 
@@ -23,19 +25,22 @@ Running `curl` against the IP gave me a disappointing `404 not found` error.
 
 I tried a few urls (index.html, data.json, etc.) but to no avail.
 
+
 ## Finding the URLs
 
 Next I downloaded the Android APK of the "KACO NX Setup" app, unzipped the
-APK, decompiled the DEX files (using a tool called jadx).
+APK, decompiled the DEX files (using a tool called `jadx`):
 ```
 git clone https://github.com/skylot/jadx.git
 ./gradlew dist
 build/jadx/bin/jadx -d ../decompile/ ../classes.dex ../classes2.dex
 ```
 
-Looking through the files, and strings, first thing to notice that the main
+Looking through the files, and strings, first thing to notice, that the main
 app is called `com.aiswei.tool`.  In the `https` subdirectory there is an
-`APIServiceV2.java` and `AcApi.java` which contains everything we need.
+`APIServiceV2.java` and `AcApi.java` which contains everything we need!
+
+First target seems to be `getdev.cgi`:
 
 ```
 curl http://IP:8484/getdev.cgi
@@ -50,13 +55,17 @@ This shows us a few interesting things
 
 Unfortunately the other URLs didn't quite work but expected some parameters.
 
+As I'm really lazy at reading code, I decided it would be more fun to
+set up a fake inverter proxy.
+
+
 ## Fake inverter
 
-Instead of firing up wireshark (the inverter is actually on a different network a few 100 kms away),
 I decided to use flask to build a fake inverter interface (see `fake_inverter.py`).
 
-First step was to add a `/getdev.cgi` response. Firing up the App on the phone, indeed found the
-fake inverter. Next thing the app requests is
+First step was to add a `/getdev.cgi` response. Running the KACO NX App on the phone, indeed found the
+fake inverter (the "scanning" seems to just do a probe of port 8484 of all local devices on the network.
+Next thing the app requests is
 
 ```
 /wlanget.cgi?info=2
