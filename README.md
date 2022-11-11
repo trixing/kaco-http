@@ -37,6 +37,7 @@ Looking through the files, and strings, first thing to notice that the main
 app is called `com.aiswei.tool`.  In the `https` subdirectory there is an
 `APIServiceV2.java` and `AcApi.java` which contains everything we need.
 
+```
 curl http://IP:8484/getdev.cgi
 
 {"psn":"scrubbed","key":"scrubbed","typ":5,"nam":"Wi-Fi Stick","mod":"B32078-10","muf":"KACO","brd":"KACO","hw":"M11","sw":"21618-006R","wsw":"ESP32-WROOM-32U","tim":"2022-11-11 13:19:34","pdk":"","ser":"","protocol":"V1.0","host":"cn-shanghai","port":1883,"status":-1}
@@ -57,6 +58,7 @@ I decided to use flask to build a fake inverter interface (see `fake_inverter.py
 
 First step was to add a `/getdev.cgi` response. Firing up the App on the phone, indeed found the
 fake inverter. Next thing the app requests is
+
 ```
 /wlanget.cgi?info=2
 {"mode":"STATION","sid":"lasseredn","srh":-43,"ip":"192.168.2.218","gtw":"192.168.2.1","msk":"255.255.255.0"}
@@ -64,13 +66,16 @@ fake inverter. Next thing the app requests is
 ```
 
 Mocking this out leads to 
+
 ```
 /getdev.cgi?device=2
 {"inv":[{"isn":"8.0NX312008413","add":3,"safety":70,"rate":8000,"msw":"V610-03043-04 ","ssw":"V610-60009-00 ","tsw":"V610-11009-01 ","pac":386,"etd":58,"eto":461,"err":0,"cmv":"V2.1.1AV2.00","mty":51,"psb_eb":1}],"num":1}
 ```
+
 and ultimately
+
 ```
-getdevdata.cgi?device=2&sn=8.0NX312008413
+getdevdata.cgi?device=2&sn=8.0NX312001234
 
 {"flg":1,"tim":"20221111140900","tmp":365,"fac":5001,"pac":381,"sac":381,"qac":0,"eto":461,"etd":58,"hto":58,"pf":100,"wan":0,"err":0,"vac":[2333,2350,2358],"iac":[7,8,7],"vpv":[3517,3600],"ipv":[50,57],"str":[]}
 ```
